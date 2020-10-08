@@ -1,13 +1,13 @@
 export default class Message{
-    text:string = '';
-    author:string = 'John Doe';
+    text = '';
+    author = 'John Doe';
     timestamp: Date | undefined;
     room: string | undefined;
 
-    constructor({created = Date.now(), sender = 'John Doe', text = '', room = sender}:any) {
-        this.room = room;
-        this.timestamp = new Date(created);
-        this.author = sender;
-        this.text = text;
+    constructor(item: any) {
+        this.room = item.room;
+        this.timestamp = new Date(item.created);
+        this.author = item.sender.username;
+        this.text = item.text;
     }
 }

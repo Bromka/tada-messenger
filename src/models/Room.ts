@@ -2,13 +2,40 @@ import Message from "@/models/Message";
 
 export default class Room{
 
-    private _name = '';
-    private _messages: Message[] = []
-    private _created: string | Date | undefined;
-    private _text: string = '';
 
-    constructor(name:string) {
+    name = '';
+    private _messages: Message[] = []
+    private _lastMessage: any;
+    titleTextInList = {}
+
+    constructor(name: string, args: any) {
         this.name = name;
+        this.lastMessage = args.last_message;
+
+    }
+
+
+    get lastMessage(): any {
+        return this._lastMessage;
+    }
+
+    set lastMessage(value: any) {
+        this._lastMessage = value;
+        const obj = {
+            author: value.sender.username,
+            text: value.text,
+            date: value.created
+        }
+        this.titleTextInList = obj;
+    }
+
+    async fetchMessages(){
+        const response = await fetch(`https://nane.tada.team/api/rooms/${this.name}/history`)
+        const data = await response.json();
+        this.messages = [];
+        data.result.forEach(item => {
+            this.addMessage(new Message(item))
+        })
     }
 
     get messages(): Message[] {
@@ -20,32 +47,8 @@ export default class Room{
     }
 
 
-    get name(): string {
-        return this._name;
-    }
-
-    get text(): string {
-        return this._text;
-    }
-
-    set text(value: string) {
-        this._text = value;
-    }
-
-    set name(value: string) {
-        this._name = value;
-    }
-
     addMessage(message: Message){
         this._messages.push(message);
-    }
-
-    get created(): string | Date | undefined {
-        return this._created;
-    }
-
-    set created(value: string | Date | undefined) {
-        this._created = value;
     }
 
 

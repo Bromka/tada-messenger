@@ -1,15 +1,29 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
+import server from './server'
+import Room from "@/models/Room";
 
 Vue.use(Vuex)
 
 export default new Vuex.Store({
-  state: {
+  modules: {
+    server
+  },
+  actions:{
   },
   mutations: {
+    setName(state, val){
+      console.log(val)
+      state.name = val;
+    }
   },
-  actions: {
+  state: {
+    name: "John Doe"
   },
-  modules: {
+  getters: {
+    name(state){
+      return state.name
+    }
+
   }
 })

@@ -1,6 +1,6 @@
-export default function (val: Date, opt:string): string {
+export default function (val: Date, opt: string): string {
 
-    const options:any = {}
+    const options: any = {}
     if (opt.includes('date')){
         options.day = '2-digit';
         options.month = 'long';

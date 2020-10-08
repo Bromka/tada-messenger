@@ -20,6 +20,7 @@
         "src/*"
       ]
     },
+
     "lib": [
       "esnext",
       "dom",
@@ -36,5 +37,8 @@
   ],
   "exclude": [
     "node_modules"
-  ]
+  ],
+  "rules": {
+    "adjacent-overload-signatures": false
+  }
 }
