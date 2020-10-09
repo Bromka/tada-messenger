@@ -1,6 +1,14 @@
-export default function (val: Date, opt: string): string {
+interface Options {
+    day?: string;
+    month?: string;
+    year?: string;
+    second?: string;
+    minute?: string;
+    hour?: string;
+}
 
-    const options: any = {}
+export default function (val: Date, opt: string): string {
+    const options: Options = {}
     if (opt.includes('date')){
         options.day = '2-digit';
         options.month = 'long';

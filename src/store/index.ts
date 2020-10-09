@@ -13,12 +13,12 @@ export default new Vuex.Store({
   },
   mutations: {
     setName(state, val){
-      console.log(val)
+      // console.log(val)
       state.name = val;
     }
   },
   state: {
-    name: "John Doe"
+    name: ""
   },
   getters: {
     name(state){

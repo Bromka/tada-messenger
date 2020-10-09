@@ -1,214 +1,49 @@
 <template>
     <div id="app">
-        <div class="wrap_app">
-            <Navbar :title="activeRoom.name"/>
-            <div class="app_body">
-                <div class="rooms_list_wrap">
-                    <ul>
-                        <li :class="{active: room == activeRoom}" :key="room.name" @click="doClick(room)"
-                            class="room_unit"
-                            v-for="(room) in rooms">
-                            <div class="room__title">{{room.name}}</div>
-                            <div class="room__last_message">
-                        <span class="author">
-                            от {{room.titleTextInList.author}}:
-                        </span>
-                                <span class="text">
-                                    {{room.titleTextInList.text}}
-                            </span>
-                                <span class="date">
-                                    {{room.titleTextInList.date | date('datetime')}}
-                                </span>
-
-                            </div>
-
-                        </li>
-                        <li class="modal-trigger room_unit grey darken-3" data-target="modal1">
-                            <div class="room__title">Написать в новую комнату</div>
-                        </li>
-                    </ul>
-                </div>
-                <div class="one_room_wrap">
-                    <div class="single_room">
-                        <ul>
-                            <li :key="(message.timestamp).toString() + Math.random()" v-for="(message) in messages">
-                                <Message :message="message"/>
-                            </li>
-                        </ul>
-
-
-                    </div>
-                    <form @submit.prevent="sendMessage" ref="form">
-
-                        <div class="column i_wrap">
-                            <a class="btn-floating btn-small waves-effect waves-light btn-flat blue-grey lighten-2" type="submit" @click="$refs.form.submit()"><i
-                                    class="material-icons right">send</i></a>
-                        </div>
-                        <div class="column input_wrap">
-
-                            <input autocomplete="false" class="message_input" spellcheck="false" type="text"
-                                   v-model="newMessage">
-
-                        </div>
-
-                    </form>
-                </div>
-
-            </div>
-        </div>
-
-
-        <div class="modal" id="modal1" ref="modalel">
-            <form @submit.prevent="messageToRoom">
-                <div class="modal-content">
-                    <input autocomplete="false" class="message_input" spellcheck="false" type="text"
-                           v-model="newRoom">
-                    <label>Название комнаты</label>
-                    <input autocomplete="false" class="message_input" spellcheck="false" type="text"
-                           v-model="newMessage">
-                    <label>Сообщение</label>
-                </div>
-                <div class="modal-footer">
-                    <input class="modal-close waves-effect waves-green btn-flat" href="#!" type=submit>
-                </div>
+        <div v-if="!userName" class="nameform">
+            Вы кто такие?
+            <form @submit.prevent="changeUserName" class="changeUserName">
+            <input type="text" v-model="name" class="nameForm" @input="empty = false" :class="{invalid: $v.name.$invalid && !empty}" spellcheck="false">
+                <input type="submit" class="btn brnsubmit" value="Это я">
             </form>
         </div>
+        <Messenger v-else/>
+
+
 
 
     </div>
 </template>
 
 <script lang="ts">
-    import {Component, Vue, Watch} from 'vue-property-decorator';
-    import Navbar from "./components/Navbar.vue"
-    import Message from "@/components/Message.vue"
-    import MessageModel from '@/models/Message.ts'
+    import {Component, Vue} from 'vue-property-decorator';
+    import Messenger from '@/components/Messenger.vue'
+    import { Validate } from "vuelidate-property-decorators";
+    import { maxLength, required, minLength } from "vuelidate/lib/validators";
+
 
     @Component({
-        components: {Message, Navbar},
+        components: {Messenger},
     })
-    export default class App extends Vue {
-        rooms = {};
-        activeRoom = {};
-        messages = [];
-        Socket: any;
-        newMessage = '';
-        newRoom = '';
 
-        get userName() {
+
+    export default class App extends Vue {
+        get userName(){
             return this.$store.getters.name
         }
+        @Validate({ required, minLength: minLength(3), maxLength: maxLength(49) })
+        name = ''
+        empty = true;
 
-        @Watch('userName')
-        onChildChanged(val: string, oldVal: string) {
-            this.Socket.close()
-            this.activateWS()
-        }
-
-        async mounted() {
-            const M = window.M
-            const instance = M.Modal.init(this.$refs.modalel, {})
-
-            if (!Object.keys(this.$store.getters.rooms).length) {
-                await this.$store.dispatch('fetchRooms')
-                this.rooms = this.$store.getters.rooms;
+        changeUserName(){
+            if (this.$v.name.$invalid) {
+                this.$v.$touch();
+                return;
             }
-            const firstRoom = Object.keys(this.rooms)[0]
-
-
-            this.doClick(this.rooms[firstRoom])
-            this.activateWS()
-
-
+            this.$store.commit('setName', this.name)
         }
-
-        async doClick(roomName: {}) {
-            if (this.activeRoom !== roomName) {
-                this.activeRoom = roomName
-                if (!this.activeRoom.messages.length) {
-                    await this.activeRoom.fetchMessages()
-                }
-                this.messages = this.activeRoom.messages;
-
-            }
-        }
-
-
-        activateWS() {
-
-            const Username = this.$store.getters.name
-            const Socket = new WebSocket(`wss://nane.tada.team/ws?username=${Username}`)
-            this.Socket = Socket;
-
-            this.$store.commit('setSocket', Socket)
-
-            Socket.onopen = () => {
-                console.log("Соединение установлено.");
-                this.Socket = Socket;
-
-            };
-
-            Socket.onclose = function (event) {
-                if (event.wasClean) {
-                    console.log('Соединение закрыто чисто');
-                } else {
-                    console.log('Обрыв соединения'); // например, "убит" процесс сервера
-                }
-                console.log('Код: ' + event.code + ' причина: ' + event.reason);
-            };
-
-            Socket.onmessage = (event) => {
-
-                console.log("Получены данные " + event.data);
-                const data = JSON.parse(event.data)
-                console.log(data)
-                const message = {
-                    room: data.room,
-                    timestamp: data.created,
-                    author: data.sender.username || 'some',
-                    text: data.text
-                }
-
-
-                if (this.rooms[data.room]) {
-                    this.rooms[data.room].addMessage(new MessageModel(data))
-                } else {
-                    this.$store.commit('addRoom', data);
-                    console.log('появилась новая комната')
-                    this.rooms[data.room].addMessage(new MessageModel(data))
-                    this.rooms = this.$store.getters.rooms;
-                    this.doClick(this.rooms[data.room])
-                    this.$forceUpdate()
-                }
-
-            };
-
-            Socket.onerror = function (error) {
-                console.log(`Ошибка ${error}`);
-
-            };
-        }
-
-        sendMessage(e, room = null) {
-
-
-            const message = {
-                "room": room || this.activeRoom.name,
-                "text": this.newMessage
-            }
-            console.log(message)
-            this.Socket.send(JSON.stringify(message))
-            this.newMessage = ''
-        }
-
-        messageToRoom() {
-
-            this.sendMessage('', this.newRoom)
-            this.newMessage = ''
-            this.newRoom = ''
-        }
-
     }
+
 </script>
 
 <style lang="scss">
@@ -307,6 +142,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            border-top: 1px solid $border-color;
 
 
 
@@ -343,6 +179,15 @@
         }
     }
 
+    .nameform{
+        display: flex;
+        margin-top: 10%;
+        flex-direction: column;
+        align-items: center;
+        color: #eceff1
+
+    }
+
     .modal {
         width: 600px;
         background-color: $base-color;
@@ -350,5 +195,16 @@
         .modal-footer {
             background-color: $base-color;
         }
+    }
+    .changeUserName{
+        text-align: center;
+
+    }
+    input.nameForm{
+        color: #eceff1;
+
+    }
+    .brnsubmit{
+        margin-top: 10px;
     }
 </style>

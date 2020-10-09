@@ -1,5 +1,5 @@
 <template>
-    <div class="wrap">
+    <div class="wrap" :class="{selfmessage: isMyMessage}">
         <div class="body">
             {{message.text}}
         </div>
@@ -20,7 +20,14 @@
     export default class App extends Vue {
         @Prop() message: any;
 
+        get isMyMessage(){
+            return this.message.author === this.$store.getters.name
+        }
+
     }
+
+
+
 
 </script>
 <style lang="scss" scoped>
@@ -34,6 +41,7 @@
         color: #eceff1;
         font-size: 13px;
         margin: 0px 20px;
+        align-self: start;
         .bottom{
             display: flex;
             justify-content: space-between;
@@ -48,5 +56,11 @@
             word-wrap: break-word;
         }
 
+
+
+    }
+
+    div.selfmessage{
+        background-color: #2a363b;
     }
 </style>

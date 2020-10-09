@@ -1,14 +1,17 @@
 import Room from '../models/Room'
+
+
 export default {
     actions:{
         async fetchRooms({commit}: any) {
             const roomsData = await fetch('https://nane.tada.team/api/rooms')
             try {
                 const json = await roomsData.json()
-                console.log('Rooms has been loaded.')
+                // console.log('Rooms has been loaded.')
                 commit('setRooms', json.result)
 
             } catch (e) {
+                throw new Error(e)
                 console.error(e)
             }
 
@@ -21,7 +24,7 @@ export default {
             })
         },
         setSocket(ctx: any){
-            console.log(ctx)
+            // console.log(ctx)
             ctx.Socket = 'asdasdasd'
             // state.Socket = new WebSocket(`wss://nane.tada.team/ws?username=${state.name}`)
         },
@@ -30,7 +33,7 @@ export default {
             state.Socket = null;
         },
         addRoom(state: any, data: any) {
-            console.log('addRoom', data)
+            // console.log('addRoom', data)
             state.rooms[data.room] = new Room(data.room, {
                 'last_message': {
                     "room": data.room,
@@ -39,7 +42,7 @@ export default {
                     "text": data.text
                 }
             })
-            console.log(state.rooms)
+            // console.log(state.rooms)
         }
     },
     state: {
