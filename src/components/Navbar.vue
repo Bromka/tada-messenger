@@ -5,18 +5,17 @@
                 <span class="brand-logo">{{title}}</span>
             </div>
             <div class="column right">
-
-                <div @blur="onEdit"
-                     @keydown.enter.prevent="endEdit"
-                     class="editme"
-                     contenteditable
-                     v-text="userName"
-                     :class="{ invalid: $v.userName.$invalid }"
-                     @input="validateName"
-                     ref="nameEditable"
-                     spellcheck="false"
-
-                ></div>
+                <div
+                        ref="nameEditable"
+                        spellcheck="false"
+                        class="editme"
+                        contenteditable="true"
+                        :class="{ invalid: $v.name.$invalid }"
+                        @blur="onEdit"
+                        @keydown.enter.prevent="endEdit"
+                        v-text="userName"
+                        @input="validateName">
+                </div>
                 <i class="material-icons right" @click="$refs.nameEditable.focus()">edit</i>
 
             </div>
@@ -36,10 +35,12 @@
         @Prop() title: string | undefined;
 
         @Validate({ required, minLength: minLength(3), maxLength: maxLength(49) })
+        name = ''
+
         userName = this.$store.getters.name;
 
         validateName(e: any){
-            this.userName = e.target.textContent.trim()
+            this.name = e.target.textContent.trim()
         }
 
         onEdit() {
@@ -55,14 +56,18 @@
                 this.$v.$touch();
                 return;
             } else {
+                this.$refs.nameEditable.blur()
                 this.changeName()
             }
         }
 
         changeName() {
-            this.$store.commit('setName', this.userName)
+            this.$store.commit('setName', this.name)
             this.userName = this.$store.getters.name;
-            this.$refs.nameEditable.blur()
+        }
+
+        mounted(){
+            this.name = this.userName;
         }
 
     }
@@ -79,9 +84,13 @@
         justify-content: space-between;
     }
 
-    .column.right{
+
+    div.column.right{
        display: flex;
         align-items: center;
+        i{
+            margin-right: 10px
+        }
 
     }
     .username {

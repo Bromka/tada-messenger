@@ -174,6 +174,10 @@
                 display: flex;
                 justify-content: center;
 
+                i{
+                    color: #90a4ae;
+                }
+
             }
 
         }
